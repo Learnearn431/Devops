@@ -81,6 +81,24 @@ resource "aws_security_group" "web_sg" {
 }
 
 
+# creating key pair and created in your local file 
+
+resource "aws_key_pair" "projectkey" {
+ key_name = "project-key"
+ public_key = tls_private_key.rsa.public_key_openssh
+}
+
+resource "tls_private_key" "rsa" {
+  algorithm = "RSA"
+  rsa_bits  = 4096
+}
+
+
+resource "local_file" "project-key" {
+  content  = "tls_private_key.rsa.private_key_pem"
+  filename = "projectkey"
+}
+
 # creating ec2 server for the frontend
 
 resource "aws_instance" "frontend" {
@@ -88,7 +106,7 @@ resource "aws_instance" "frontend" {
   instance_type          = "t2.micro"
   subnet_id              = aws_subnet.public_subnet.id
   vpc_security_group_ids = [aws_security_group.web_sg.id]
-  key_name               = "alocholstore"
+  key_name               = "projectkey"
   user_data              = <<-EOF
               #!/bin/bash
               sudo yum update -y
